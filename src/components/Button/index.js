@@ -16,6 +16,7 @@ function Button({
     disabled = false,
     children,
     onClick,
+    onBack,
     className,
     rightIcon,
     leftIcon,
@@ -25,6 +26,7 @@ function Button({
 
     const props = {
         onClick,
+        onBack,
         ...passProps,
     };
 
