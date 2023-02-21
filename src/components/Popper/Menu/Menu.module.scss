@@ -9,7 +9,12 @@
 }
 
 .menu-popper {
-    padding-bottom: 4px;
+    padding-bottom: 8px;
+}
+
+.menu-body {
+    height: 300px;
+    overflow-y: auto;
 }
 
 .menu-item {
@@ -34,6 +39,7 @@
     position: relative;
     height: 50px;
     margin-top: -8px;
+    flex-shrink: 0;
 }
 
 .back-btn {
