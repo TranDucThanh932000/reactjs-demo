@@ -6,6 +6,8 @@ import AccountItem from '~/components/AccountItem';
 import classNames from 'classnames/bind';
 import styles from './Search.module.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import useDebounce from '~/hooks/useDebounce';
+import * as searchService from '~/api-services/searchServices';
 
 const cx = classNames.bind(styles);
 
@@ -13,17 +15,41 @@ function Search() {
     const [searchValue, setSearchValue] = useState('');
     const [searchResult, setSearchResult] = useState([]);
     const [showResult, setShowResult] = useState(true);
+    const [loading, setLoading] = useState(false);
+
+    const debounced = useDebounce(searchValue, 500);
 
     const inputRef = useRef();
 
     useEffect(() => {
-        setTimeout(() => {
-            setSearchResult([1, 2, 3, 4]);
-        }, 0);
-    }, []);
+        if (!debounced.trim()) {
+            setSearchResult([]);
+            return;
+        }
+
+        const fetchApi = async () => {
+            setLoading(true);
+            const result = await searchService.search(debounced, 'less');
+            setSearchResult(result);
+            setLoading(false);
+        };
+
+        fetchApi();
+    }, [debounced]);
+
+    // const search = (e) => {
+    //     e.preventDefault();
+    // };
 
     const handleHideResult = () => {
         setShowResult(false);
+    };
+
+    const handleChange = (e) => {
+        const searchValue = e.target.value;
+        if (!searchValue.startsWith(' ')) {
+            setSearchValue(searchValue);
+        }
     };
 
     const handleClear = () => {
@@ -31,6 +57,10 @@ function Search() {
         setSearchResult([]);
         inputRef.current.focus();
     };
+
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+    // };
 
     return (
         <HeadLessTippy
@@ -40,11 +70,9 @@ function Search() {
             render={(attrs) => (
                 <div className={cx('menu-items')} tabIndex="-1" {...attrs}>
                     <PopperWrapper>
-                        <h4 className={cx('search-title')}>Accounts</h4>
-                        <AccountItem></AccountItem>
-                        <AccountItem></AccountItem>
-                        <AccountItem></AccountItem>
-                        <AccountItem></AccountItem>
+                        {searchResult.map((result) => (
+                            <AccountItem key={result.id} data={result} />
+                        ))}
                     </PopperWrapper>
                 </div>
             )}
@@ -54,19 +82,24 @@ function Search() {
                 <input
                     placeholder="Search accounts and videos"
                     spellCheck={false}
-                    onChange={(e) => setSearchValue(e.target.value)}
+                    onChange={handleChange}
                     value={searchValue}
                     ref={inputRef}
                     onFocus={() => setShowResult(true)}
                 />
-                {!!searchValue && (
+                {!!searchValue && !loading && (
                     <button className={cx('clear')} onClick={handleClear}>
                         <FontAwesomeIcon icon={faCircleXmark} />
                     </button>
                 )}
 
-                {/* <FontAwesomeIcon className={cx('loading')} icon={faSpinner} /> */}
-                <button className={cx('search-btn')}>
+                {loading && <FontAwesomeIcon className={cx('loading')} icon={faSpinner} />}
+                <button
+                    className={cx('search-btn')}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                    }}
+                >
                     <FontAwesomeIcon icon={faMagnifyingGlass} />
                 </button>
             </div>
